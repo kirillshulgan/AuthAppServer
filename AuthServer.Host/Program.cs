@@ -21,9 +21,7 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddDbContext<AuthDbContext>(options =>
 {
-    // Строку подключения к БД нужно добавить в appsettings.Development.json
-    options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")
-        ?? "Host=localhost;Database=auth_server_db;Username=postgres;Password=postgres");
+    options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection"));
     options.UseOpenIddict<Guid>();
 });
 
