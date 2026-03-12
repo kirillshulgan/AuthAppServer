@@ -1,6 +1,7 @@
 ﻿using AuthServer.Domain.Entities;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using System.ComponentModel.DataAnnotations;
@@ -11,13 +12,16 @@ namespace AuthServer.Host.Pages.Account;
 public class LoginWithEmailCodeModel : PageModel
 {
     private readonly UserManager<ApplicationUser> _userManager;
+    private readonly IEmailSender _emailSender;
     private readonly ILogger<LoginWithEmailCodeModel> _logger;
 
     public LoginWithEmailCodeModel(
         UserManager<ApplicationUser> userManager,
+        IEmailSender emailSender,
         ILogger<LoginWithEmailCodeModel> logger)
     {
         _userManager = userManager;
+        _emailSender = emailSender;
         _logger = logger;
     }
 
@@ -60,9 +64,19 @@ public class LoginWithEmailCodeModel : PageModel
             // Генерируем 6-значный код для Email
             var code = await _userManager.GenerateTwoFactorTokenAsync(user, TokenOptions.DefaultEmailProvider);
 
-            // TODO: Отправить код на email. В реальном проекте тут будет IEmailSender.
             _logger.LogInformation("КОД ДЛЯ ВХОДА ПОЛЬЗОВАТЕЛЯ {Email}: {Code}", user.Email, code);
             // Для целей тестирования мы выводим его в консоль/логи.
+
+            var subject = "Код подтверждения для входа";
+            var htmlMessage = $@"
+                <div style='font-family: Arial, sans-serif; padding: 20px;'>
+                    <h2>Здравствуйте!</h2>
+                    <p>Ваш код для входа на сайт:</p>
+                    <h1 style='color: #007bff; letter-spacing: 2px;'>{code}</h1>
+                    <p>Если это были не вы, просто проигнорируйте это письмо.</p>
+                </div>";
+
+            await _emailSender.SendEmailAsync(user.Email, subject, htmlMessage);
         }
 
         // Перенаправляем на страницу ввода кода, передавая email в параметрах
