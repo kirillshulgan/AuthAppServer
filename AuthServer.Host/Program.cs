@@ -155,10 +155,15 @@ builder.Services.AddOpenIddict()
             options.AddDevelopmentEncryptionCertificate()
                    .AddDevelopmentSigningCertificate();
             options.DisableAccessTokenEncryption(); // Удобно для дебага токенов в jwt.io
-
-            // РАЗРЕШАЕМ HTTP В DEV
-            options.UseAspNetCore().DisableTransportSecurityRequirement();
         }
+        else
+        {
+            options.AddEphemeralEncryptionKey()
+                .AddEphemeralSigningKey();
+        }
+
+        // РАЗРЕШАЕМ HTTP
+        options.UseAspNetCore().DisableTransportSecurityRequirement();
     })
     // 3.3. Настройка валидации токенов (для UserInfo и локальных API сервиса)
     .AddValidation(options =>
@@ -369,6 +374,12 @@ passkeysLoginGroup.MapPost("/verify", async (
         return Results.BadRequest(new[] { new { description = ex.Message } });
     }
 });
+
+using (var scope = app.Services.CreateScope())
+{
+    var db = scope.ServiceProvider.GetRequiredService<AuthDbContext>();
+    db.Database.Migrate();
+}
 
 app.UseHttpsRedirection();
 app.UseStaticFiles();
