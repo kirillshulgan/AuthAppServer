@@ -28,6 +28,8 @@ services:
       - redis
     env_file:
       - .env
+    volumes:
+      - /root/auth-data/certs/openiddict.pfx:/app/certs/openiddict.pfx:ro
 
 volumes:
   postgres_data:

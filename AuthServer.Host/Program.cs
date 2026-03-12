@@ -10,6 +10,7 @@ using Microsoft.EntityFrameworkCore;
 using OpenIddict.Abstractions;
 using Quartz;
 using StackExchange.Redis;
+using System.Security.Cryptography.X509Certificates;
 
 if (File.Exists(".env"))
 {
@@ -158,10 +159,10 @@ builder.Services.AddOpenIddict()
                .EnableTokenEndpointPassthrough()
                .EnableUserInfoEndpointPassthrough()
                .EnableEndSessionEndpointPassthrough()
-               .EnableStatusCodePagesIntegration();
+               .EnableStatusCodePagesIntegration()
+               .DisableTransportSecurityRequirement(); // <-- Перенесли сюда (РАЗРЕШАЕМ HTTP)
 
         // Ключи шифрования и подписи
-        // ВАЖНО: В продакшене использовать .AddEncryptionCertificate() и .AddSigningCertificate()
         if (builder.Environment.IsDevelopment())
         {
             options.AddDevelopmentEncryptionCertificate()
@@ -170,12 +171,26 @@ builder.Services.AddOpenIddict()
         }
         else
         {
-            options.AddEphemeralEncryptionKey()
-                .AddEphemeralSigningKey();
-        }
+            var certPassword = builder.Configuration["OpenIddict:CertPassword"];
 
-        // РАЗРЕШАЕМ HTTP
-        options.UseAspNetCore().DisableTransportSecurityRequirement();
+            if (!string.IsNullOrEmpty(certPassword) && File.Exists("/app/certs/openiddict.pfx"))
+            {
+                var cert = new X509Certificate2("/app/certs/openiddict.pfx", certPassword,
+                    X509KeyStorageFlags.MachineKeySet | X509KeyStorageFlags.Exportable);
+
+                options.AddEncryptionCertificate(cert)
+                       .AddSigningCertificate(cert);
+
+                Console.WriteLine("[INFO] OpenIddict загрузил боевой X509 сертификат из pfx.");
+            }
+            else
+            {
+                options.AddDevelopmentEncryptionCertificate()
+                       .AddDevelopmentSigningCertificate();
+
+                Console.WriteLine("[WARNING] OpenIddict использует Development сертификаты!");
+            }
+        }
     })
     // 3.3. Настройка валидации токенов (для UserInfo и локальных API сервиса)
     .AddValidation(options =>
