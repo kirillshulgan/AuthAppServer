@@ -1,11 +1,10 @@
-using AuthServer.Application.Applications;
+п»їusing AuthServer.Application.Applications;
 using AuthServer.Domain.Entities;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
-using System.Security.Claims;
 
 namespace AuthServer.Host.Pages.Profile;
 
@@ -45,12 +44,12 @@ public class ApplicationsModel : PageModel
 
         if (success)
         {
-            _logger.LogInformation("Пользователь {UserId} отозвал доступ для AuthorizationId: {AuthId}", userId, authorizationId);
-            StatusMessage = "Доступ приложению успешно отозван. Все активные сессии завершены.";
+            _logger.LogInformation("РџРѕР»СЊР·РѕРІР°С‚РµР»СЊ {UserId} РѕС‚РѕР·РІР°Р» РґРѕСЃС‚СѓРї РґР»СЏ AuthorizationId: {AuthId}", userId, authorizationId);
+            StatusMessage = "Р”РѕСЃС‚СѓРї РїСЂРёР»РѕР¶РµРЅРёСЋ СѓСЃРїРµС€РЅРѕ РѕС‚РѕР·РІР°РЅ. Р’СЃРµ Р°РєС‚РёРІРЅС‹Рµ СЃРµСЃСЃРёРё Р·Р°РІРµСЂС€РµРЅС‹.";
         }
         else
         {
-            StatusMessage = "Ошибка: не удалось отозвать доступ. Возможно, он уже был отозван.";
+            StatusMessage = "РћС€РёР±РєР°: РЅРµ СѓРґР°Р»РѕСЃСЊ РѕС‚РѕР·РІР°С‚СЊ РґРѕСЃС‚СѓРї. Р’РѕР·РјРѕР¶РЅРѕ, РѕРЅ СѓР¶Рµ Р±С‹Р» РѕС‚РѕР·РІР°РЅ.";
         }
 
         return RedirectToPage();

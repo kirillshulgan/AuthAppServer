@@ -1,4 +1,4 @@
-using AuthServer.Domain.Entities;
+п»їusing AuthServer.Domain.Entities;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -24,8 +24,8 @@ public class ForgotPasswordModel : PageModel
 
     public class InputModel
     {
-        [Required(ErrorMessage = "Email обязателен")]
-        [EmailAddress(ErrorMessage = "Некорректный формат Email")]
+        [Required(ErrorMessage = "Email РѕР±СЏР·Р°С‚РµР»РµРЅ")]
+        [EmailAddress(ErrorMessage = "РќРµРєРѕСЂСЂРµРєС‚РЅС‹Р№ С„РѕСЂРјР°С‚ Email")]
         public string Email { get; set; } = string.Empty;
     }
 
@@ -35,25 +35,25 @@ public class ForgotPasswordModel : PageModel
 
         var user = await _userManager.FindByEmailAsync(Input.Email);
 
-        // Защита от Enumeration Attack из ТЗ: 
-        // Мы всегда возвращаем успешный ответ, даже если email не найден
+        // Р—Р°С‰РёС‚Р° РѕС‚ Enumeration Attack РёР· РўР—: 
+        // РњС‹ РІСЃРµРіРґР° РІРѕР·РІСЂР°С‰Р°РµРј СѓСЃРїРµС€РЅС‹Р№ РѕС‚РІРµС‚, РґР°Р¶Рµ РµСЃР»Рё email РЅРµ РЅР°Р№РґРµРЅ
         if (user != null && await _userManager.IsEmailConfirmedAsync(user))
         {
             var code = await _userManager.GeneratePasswordResetTokenAsync(user);
 
-            // В реальном проекте тут будет IEmailSender
-            // Ссылка должна вести на страницу ResetPassword, передавая email и code
+            // Р’ СЂРµР°Р»СЊРЅРѕРј РїСЂРѕРµРєС‚Рµ С‚СѓС‚ Р±СѓРґРµС‚ IEmailSender
+            // РЎСЃС‹Р»РєР° РґРѕР»Р¶РЅР° РІРµСЃС‚Рё РЅР° СЃС‚СЂР°РЅРёС†Сѓ ResetPassword, РїРµСЂРµРґР°РІР°СЏ email Рё code
             var callbackUrl = Url.Page(
                 "/Account/ResetPassword",
                 pageHandler: null,
                 values: new { email = Input.Email, code = code },
                 protocol: Request.Scheme);
 
-            _logger.LogInformation("ССЫЛКА ДЛЯ СБРОСА ПАРОЛЯ {Email}: {Url}", user.Email, callbackUrl);
+            _logger.LogInformation("РЎРЎР«Р›РљРђ Р”Р›РЇ РЎР‘Р РћРЎРђ РџРђР РћР›РЇ {Email}: {Url}", user.Email, callbackUrl);
         }
         else
         {
-            _logger.LogWarning("Запрос на сброс для несуществующего или неподтвержденного email: {Email}", Input.Email);
+            _logger.LogWarning("Р—Р°РїСЂРѕСЃ РЅР° СЃР±СЂРѕСЃ РґР»СЏ РЅРµСЃСѓС‰РµСЃС‚РІСѓСЋС‰РµРіРѕ РёР»Рё РЅРµРїРѕРґС‚РІРµСЂР¶РґРµРЅРЅРѕРіРѕ email: {Email}", Input.Email);
         }
 
         return RedirectToPage("./ForgotPasswordConfirmation");

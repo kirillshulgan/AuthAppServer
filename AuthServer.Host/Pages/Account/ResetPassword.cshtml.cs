@@ -1,4 +1,4 @@
-using AuthServer.Domain.Entities;
+п»їusing AuthServer.Domain.Entities;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -27,14 +27,14 @@ namespace AuthServer.Host.Pages.Account
             public string Email { get; set; } = string.Empty;
 
             [Required]
-            [StringLength(100, ErrorMessage = "{0} должен быть от {2} до {1} символов.", MinimumLength = 10)]
+            [StringLength(100, ErrorMessage = "{0} РґРѕР»Р¶РµРЅ Р±С‹С‚СЊ РѕС‚ {2} РґРѕ {1} СЃРёРјРІРѕР»РѕРІ.", MinimumLength = 10)]
             [DataType(DataType.Password)]
-            [Display(Name = "Новый пароль")]
+            [Display(Name = "РќРѕРІС‹Р№ РїР°СЂРѕР»СЊ")]
             public string Password { get; set; } = string.Empty;
 
             [DataType(DataType.Password)]
-            [Display(Name = "Подтвердите пароль")]
-            [Compare("Password", ErrorMessage = "Пароли не совпадают.")]
+            [Display(Name = "РџРѕРґС‚РІРµСЂРґРёС‚Рµ РїР°СЂРѕР»СЊ")]
+            [Compare("Password", ErrorMessage = "РџР°СЂРѕР»Рё РЅРµ СЃРѕРІРїР°РґР°СЋС‚.")]
             public string ConfirmPassword { get; set; } = string.Empty;
 
             [Required]
@@ -45,7 +45,7 @@ namespace AuthServer.Host.Pages.Account
         {
             if (code == null || email == null)
             {
-                return BadRequest("Для сброса пароля необходимо указать код и email.");
+                return BadRequest("Р”Р»СЏ СЃР±СЂРѕСЃР° РїР°СЂРѕР»СЏ РЅРµРѕР±С…РѕРґРёРјРѕ СѓРєР°Р·Р°С‚СЊ РєРѕРґ Рё email.");
             }
 
             Input = new InputModel
@@ -64,14 +64,14 @@ namespace AuthServer.Host.Pages.Account
             var user = await _userManager.FindByEmailAsync(Input.Email);
             if (user == null)
             {
-                // Опять же, не выдаем существование аккаунта
+                // РћРїСЏС‚СЊ Р¶Рµ, РЅРµ РІС‹РґР°РµРј СЃСѓС‰РµСЃС‚РІРѕРІР°РЅРёРµ Р°РєРєР°СѓРЅС‚Р°
                 return RedirectToPage("./ResetPasswordConfirmation");
             }
 
             var result = await _userManager.ResetPasswordAsync(user, Input.Code, Input.Password);
             if (result.Succeeded)
             {
-                return RedirectToPage("./Login"); // Или на страницу успеха
+                return RedirectToPage("./Login"); // РР»Рё РЅР° СЃС‚СЂР°РЅРёС†Сѓ СѓСЃРїРµС…Р°
             }
 
             foreach (var error in result.Errors)
