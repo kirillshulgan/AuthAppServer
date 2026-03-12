@@ -3,7 +3,9 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
+using Microsoft.AspNetCore.WebUtilities;
 using System.ComponentModel.DataAnnotations;
+using System.Text;
 
 namespace AuthServer.Host.Pages.Account
 {
@@ -64,14 +66,29 @@ namespace AuthServer.Host.Pages.Account
             var user = await _userManager.FindByEmailAsync(Input.Email);
             if (user == null)
             {
-                // Опять же, не выдаем существование аккаунта
-                return RedirectToPage("./ResetPasswordConfirmation");
+                // У вас в коде был редирект сюда, нужно будет создать эту страницу, если её нет. Либо отправлять на ./Login
+                return RedirectToPage("./ResetPasswordConfirmation"); 
             }
 
-            var result = await _userManager.ResetPasswordAsync(user, Input.Code, Input.Password);
+            // ВАЖНО: Декодируем токен из URL формата обратно в строку
+            var decodedCode = string.Empty;
+            try
+            {
+                var decodedBytes = WebEncoders.Base64UrlDecode(Input.Code);
+                decodedCode = Encoding.UTF8.GetString(decodedBytes);
+            }
+            catch (FormatException)
+            {
+                ModelState.AddModelError(string.Empty, "Неверный формат кода восстановления.");
+                return Page();
+            }
+
+            // Сбрасываем пароль
+            var result = await _userManager.ResetPasswordAsync(user, decodedCode, Input.Password);
             if (result.Succeeded)
             {
-                return RedirectToPage("./Login"); // Или на страницу успеха
+                // Рекомендуется перекидывать на страницу подтверждения
+                return RedirectToPage("./Login", new { message = "Пароль успешно изменен! Теперь вы можете войти." });
             }
 
             foreach (var error in result.Errors)
