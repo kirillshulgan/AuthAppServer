@@ -2,6 +2,7 @@ using AuthServer.Domain.Entities;
 using AuthServer.Infrastructure.Data;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.DataProtection;
+using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using OpenIddict.Abstractions;
@@ -252,6 +253,11 @@ builder.Services.AddRazorPages(options =>
 builder.Services.AddControllersWithViews(); // Для OIDC контроллеров
 
 var app = builder.Build();
+
+app.UseForwardedHeaders(new ForwardedHeadersOptions
+{
+    ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto
+});
 
 // ==========================================
 // 7. Настройка Pipeline
