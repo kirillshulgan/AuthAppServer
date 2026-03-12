@@ -1,12 +1,8 @@
-version: '3.8'
-
 services:
   postgres:
     image: postgres:15-alpine
-    environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
-      POSTGRES_DB: auth_server_db
+    env_file:
+      - .env
     ports:
       - "5432:5432"
     volumes:
@@ -18,6 +14,20 @@ services:
     ports:
       - "6379:6379"
     restart: unless-stopped
+
+  auth-server:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: auth-server
+    restart: unless-stopped
+    ports:
+      - "7000:8080"
+    depends_on:
+      - postgres
+      - redis
+    env_file:
+      - .env
 
 volumes:
   postgres_data:

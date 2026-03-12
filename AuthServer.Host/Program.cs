@@ -8,6 +8,11 @@ using OpenIddict.Abstractions;
 using Quartz;
 using StackExchange.Redis;
 
+if (File.Exists(".env"))
+{
+    DotNetEnv.Env.Load();
+}
+
 var builder = WebApplication.CreateBuilder(args);
 
 // ==========================================
