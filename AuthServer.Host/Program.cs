@@ -1,9 +1,11 @@
 using AuthServer.Domain.Entities;
+using AuthServer.Host.Services;
 using AuthServer.Infrastructure.Data;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.EntityFrameworkCore;
 using OpenIddict.Abstractions;
 using Quartz;
@@ -56,9 +58,18 @@ if (redis != null)
 }
 else
 {
-    // Если Redis недоступен - храним ключи в папке проекта (для локальной разработки)
+    // Если Redis недоступен - храним ключи в папке проекта
     var keysFolder = Path.Combine(builder.Environment.ContentRootPath, "App_Data", "Keys");
+    Directory.CreateDirectory(keysFolder); // Убеждаемся, что папка существует!
+
     dataProtectionBuilder.PersistKeysToFileSystem(new DirectoryInfo(keysFolder));
+
+    // Опционально: отключаем warning про отсутствие шифрования ключей на диске,
+    // либо включаем шифрование DPAPI (работает только на Windows).
+    if (OperatingSystem.IsWindows())
+    {
+        dataProtectionBuilder.ProtectKeysWithDpapi();
+    }
 }
 
 // ==========================================
@@ -259,6 +270,11 @@ builder.Services.Configure<ForwardedHeadersOptions>(options =>
     options.KnownIPNetworks.Clear();
     options.KnownProxies.Clear();
 });
+
+// ==========================================
+// 7. НАСТРОЙКИ SMTP
+// ==========================================
+builder.Services.AddTransient<IEmailSender, EmailSender>();
 
 var app = builder.Build();
 
