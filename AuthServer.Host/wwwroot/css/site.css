@@ -1,0 +1,53 @@
+﻿/* Общие настройки */
+html {
+    font-size: 14px;
+}
+
+@media (min-width: 768px) {
+    html {
+        font-size: 16px;
+    }
+}
+
+body {
+    margin-bottom: 60px;
+}
+
+/* Стилизация контейнеров аутентификации */
+.login-container {
+    background-color: #ffffff;
+    padding: 30px;
+    border-radius: 10px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+    margin-top: 40px;
+}
+
+/* Кастомные кнопки внешних провайдеров */
+.btn-outline-secondary {
+    border-color: #dee2e6;
+    color: #495057;
+    text-align: left;
+    position: relative;
+    padding-left: 45px;
+}
+
+    .btn-outline-secondary:hover {
+        background-color: #f8f9fa;
+        color: #212529;
+    }
+
+/* Ошибки валидации */
+.validation-summary-errors {
+    background-color: #f8d7da;
+    color: #842029;
+    padding: 10px 15px;
+    border-radius: 5px;
+    margin-bottom: 20px;
+    list-style-type: none;
+}
+
+    .validation-summary-errors ul {
+        margin-bottom: 0;
+        padding-left: 0;
+        list-style-type: none;
+    }

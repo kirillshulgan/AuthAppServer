@@ -1,0 +1,77 @@
+﻿@page
+@model AuthServer.Host.Pages.Profile.ApplicationsModel
+@{
+    ViewData["Title"] = "Мои приложения";
+}
+
+<div class="row mt-4">
+    <!-- Боковое меню -->
+    <div class="col-md-3">
+        <div class="list-group">
+            <a asp-page="./Index" class="list-group-item list-group-item-action">Профиль</a>
+            <a asp-page="./Security" class="list-group-item list-group-item-action">Безопасность</a>
+            <a asp-page="./ExternalLogins" class="list-group-item list-group-item-action">Привязанные аккаунты</a>
+            <a asp-page="./Applications" class="list-group-item list-group-item-action active">Мои приложения (Consent)</a>
+        </div>
+    </div>
+
+    <!-- Основной контент -->
+    <div class="col-md-9">
+        <h4>Доступ к вашему аккаунту</h4>
+        <p class="text-muted">Здесь отображаются сторонние приложения, которым вы разрешили доступ к своим данным.</p>
+        <hr />
+
+        @if (!string.IsNullOrEmpty(Model.StatusMessage))
+        {
+            <div class="alert alert-info alert-dismissible fade show" role="alert">
+                @Model.StatusMessage
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        }
+
+        @if (!Model.Consents.Any())
+        {
+            <div class="alert alert-light border text-center p-4">
+                <i class="bi bi-shield-check fs-1 text-success mb-2"></i>
+                <h5>Нет подключенных приложений</h5>
+                <p>Вы пока не выдавали доступ к своему профилю ни одному приложению.</p>
+            </div>
+        }
+        else
+        {
+            <div class="row">
+                @foreach (var consent in Model.Consents)
+                {
+                    <div class="col-md-6 mb-3">
+                        <div class="card h-100 shadow-sm border-0">
+                            <div class="card-body">
+                                <h5 class="card-title fw-bold">@consent.ApplicationName</h5>
+                                <h6 class="card-subtitle mb-2 text-muted small">ID: @consent.ClientId</h6>
+
+                                <p class="card-text mb-1 mt-3"><strong>Разрешения:</strong></p>
+                                <div>
+                                    @foreach (var scope in consent.Scopes.Where(s => s != "openid" && s != "offline_access"))
+                                    {
+                                        <span class="badge bg-secondary mb-1">@scope</span>
+                                    }
+                                </div>
+                            </div>
+                            <div class="card-footer bg-white border-top-0 d-flex justify-content-between align-items-center pb-3">
+                                <small class="text-muted">Выдано: @consent.CreationDate.ToShortDateString()</small>
+
+                                <!-- Форма для отзыва Consent -->
+                                <form method="post" asp-page-handler="Revoke">
+                                    <input type="hidden" name="authorizationId" value="@consent.AuthorizationId" />
+                                    <button type="submit" class="btn btn-sm btn-outline-danger"
+                                            onclick="return confirm('Вы уверены, что хотите отозвать доступ у этого приложения?');">
+                                        <i class="bi bi-trash"></i> Отозвать доступ
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+        }
+    </div>
+</div>

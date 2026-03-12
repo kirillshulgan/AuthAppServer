@@ -1,0 +1,189 @@
+﻿@page
+@model AuthServer.Host.Pages.Profile.SecurityModel
+@{
+    ViewData["Title"] = "Безопасность";
+}
+
+<div class="row mt-4">
+    <!-- Боковое меню -->
+    <div class="col-md-3">
+        <div class="list-group">
+            <a asp-page="./Index" class="list-group-item list-group-item-action">Профиль</a>
+            <a asp-page="./Security" class="list-group-item list-group-item-action active">Безопасность</a>
+            <a asp-page="./ExternalLogins" class="list-group-item list-group-item-action">Привязанные аккаунты</a>
+            <a asp-page="./Applications" class="list-group-item list-group-item-action">Мои приложения (Consent)</a>
+        </div>
+    </div>
+
+    <!-- Основной контент -->
+    <div class="col-md-9">
+        <h4>Безопасность и данные</h4>
+        <hr />
+
+        @if (!string.IsNullOrEmpty(Model.StatusMessage))
+        {
+            <div class="alert alert-info alert-dismissible fade show" role="alert">
+                @Model.StatusMessage
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        }
+
+        <!-- Блок смены пароля -->
+        <div class="card mb-4 border-0 shadow-sm">
+            <div class="card-body">
+                <h5 class="card-title mb-4"><i class="bi bi-key"></i> Изменить пароль</h5>
+                <form method="post" asp-page-handler="ChangePassword">
+                    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+                    <div class="form-group mb-3">
+                        <label asp-for="PasswordInput.CurrentPassword"></label>
+                        <input asp-for="PasswordInput.CurrentPassword" class="form-control" autocomplete="current-password" />
+                        <span asp-validation-for="PasswordInput.CurrentPassword" class="text-danger"></span>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 form-group mb-3">
+                            <label asp-for="PasswordInput.NewPassword"></label>
+                            <input asp-for="PasswordInput.NewPassword" class="form-control" autocomplete="new-password" />
+                            <span asp-validation-for="PasswordInput.NewPassword" class="text-danger"></span>
+                        </div>
+                        <div class="col-md-6 form-group mb-3">
+                            <label asp-for="PasswordInput.ConfirmPassword"></label>
+                            <input asp-for="PasswordInput.ConfirmPassword" class="form-control" autocomplete="new-password" />
+                            <span asp-validation-for="PasswordInput.ConfirmPassword" class="text-danger"></span>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary">Обновить пароль</button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Блок Passkeys (WebAuthn) -->
+        <div class="card mb-4 border-0 shadow-sm">
+            <div class="card-body">
+                <h5 class="card-title"><i class="bi bi-fingerprint"></i> Passkeys (Вход по отпечатку/лицу)</h5>
+                <p class="card-text text-muted mb-3">
+                    Добавьте Passkey (например, Windows Hello, TouchID или YubiKey), чтобы входить в систему без пароля.
+                </p>
+                <button id="btn-register-passkey" class="btn btn-outline-success">Добавить устройство (Passkey)</button>
+
+                <div id="passkey-message" class="mt-2 text-info" style="display:none;"></div>
+            </div>
+        </div>
+
+        <!-- Блок Экспорта Данных -->
+        <div class="card mb-4 border-0 shadow-sm">
+            <div class="card-body">
+                <h5 class="card-title"><i class="bi bi-download"></i> Экспорт персональных данных</h5>
+                <p class="card-text text-muted mb-3">
+                    В соответствии с политикой конфиденциальности вы можете запросить архив со всеми вашими персональными данными,
+                    которые хранятся на наших серверах. Выгрузка будет предоставлена в формате JSON.
+                </p>
+                <form method="post" asp-page-handler="ExportData">
+                    <button type="submit" class="btn btn-outline-primary">Скачать данные (JSON)</button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Блок Удаления аккаунта -->
+        <div class="card border-danger shadow-sm mt-5">
+            <div class="card-body">
+                <h5 class="card-title text-danger"><i class="bi bi-exclamation-triangle"></i> Удаление аккаунта</h5>
+                <p class="card-text text-muted mb-3">
+                    Полное удаление вашей учетной записи. Это действие <strong>необратимо</strong>
+                    (после истечения периода восстановления). Оно деактивирует аккаунт, отзовет все доступы у приложений и завершит все активные сессии.
+                </p>
+
+                <form method="post" asp-page-handler="DeleteAccount"
+                      onsubmit="return confirm('ВЫ УВЕРЕНЫ? \n\nЭто действие приведет к немедленной блокировке аккаунта и выходу со всех устройств.');">
+                    <button type="submit" class="btn btn-danger">Я понимаю риски, удалить аккаунт</button>
+                </form>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+
+    <script>
+        // Вспомогательная функция: декодирует строку Base64Url в ArrayBuffer
+        function base64urlToBuffer(base64url) {
+            const padding = '='.repeat((4 - base64url.length % 4) % 4);
+            const base64 = (base64url + padding).replace(/\-/g, '+').replace(/_/g, '/');
+            const rawData = window.atob(base64);
+            const outputArray = new Uint8Array(rawData.length);
+            for (let i = 0; i < rawData.length; ++i) {
+                outputArray[i] = rawData.charCodeAt(i);
+            }
+            return outputArray.buffer;
+        }
+
+        document.getElementById('btn-register-passkey').addEventListener('click', async () => {
+            const msg = document.getElementById('passkey-message');
+            msg.style.display = 'block';
+
+            if (!window.PublicKeyCredential) {
+                msg.innerText = "Ваш браузер не поддерживает Passkeys.";
+                return;
+            }
+
+            try {
+                // 1. Получаем опции регистрации
+                msg.innerText = "Ожидание ответа от устройства...";
+                const optionsRes = await fetch('/api/passkeys/register-options', { method: 'POST' });
+                if (!optionsRes.ok) throw new Error("Не удалось получить настройки от сервера.");
+
+                const optionsObj = await optionsRes.json();
+
+                // 2. Конвертируем строки Base64Url в ArrayBuffer для браузерного API
+                optionsObj.challenge = base64urlToBuffer(optionsObj.challenge);
+                optionsObj.user.id = base64urlToBuffer(optionsObj.user.id);
+
+                if (optionsObj.excludeCredentials) {
+                    for (let cred of optionsObj.excludeCredentials) {
+                        cred.id = base64urlToBuffer(cred.id);
+                    }
+                }
+
+                // 3. Вызываем системное окно (Windows Hello / Touch ID)
+                const credential = await navigator.credentials.create({ publicKey: optionsObj });
+
+                // 4. Подготавливаем ответ для сервера (конвертируем ArrayBuffer обратно в Base64Url)
+                const credentialData = {
+                    id: credential.id,
+                    rawId: credential.id,
+                    type: credential.type,
+                    // ДОБАВЛЯЕМ ОБЯЗАТЕЛЬНОЕ ПОЛЕ:
+                    clientExtensionResults: credential.getClientExtensionResults ? credential.getClientExtensionResults() : {},
+                    response: {
+                        attestationObject: btoa(String.fromCharCode.apply(null, new Uint8Array(credential.response.attestationObject))).replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, ''),
+                        clientDataJSON: btoa(String.fromCharCode.apply(null, new Uint8Array(credential.response.clientDataJSON))).replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '')
+                    }
+                };
+
+                // 5. Отправляем публичный ключ обратно на сервер
+                msg.innerText = "Сохранение ключа...";
+                const registerRes = await fetch('/api/passkeys/register', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(credentialData)
+                });
+
+                if (registerRes.ok) {
+                    msg.className = "mt-2 text-success";
+                    msg.innerText = "Passkey успешно добавлен! Теперь вы можете входить без пароля.";
+                } else {
+                    const errObj = await registerRes.json();
+                    throw new Error(errObj[0]?.description || "Ошибка при сохранении ключа.");
+                }
+            } catch (err) {
+                console.error(err);
+                msg.className = "mt-2 text-danger";
+                msg.innerText = "Ошибка: " + err.message;
+            }
+        });
+    </script>
+}

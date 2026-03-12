@@ -1,0 +1,50 @@
+﻿@page
+@model AuthServer.Host.Pages.ConsentModel
+@{
+    ViewData["Title"] = "Запрос доступа";
+}
+
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <div class="card mt-5 shadow-sm">
+            <div class="card-header bg-primary text-white">
+                <h4 class="mb-0">Требуется подтверждение</h4>
+            </div>
+            <div class="card-body">
+                <p class="lead">
+                    Приложение <strong>@Model.ApplicationName</strong> запрашивает доступ к вашему аккаунту.
+                </p>
+                <p>Оно получит доступ к следующим данным:</p>
+
+                <ul class="list-group mb-4">
+                    @foreach (var scope in Model.Scopes)
+                    {
+                        <li class="list-group-item">
+                            <i class="bi bi-check-circle text-success me-2"></i>
+                            <strong>@scope.DisplayName</strong>
+                            <span class="text-muted d-block small">@scope.Description</span>
+                        </li>
+                    }
+                </ul>
+
+                <div class="alert alert-info small">
+                    Разрешая доступ, вы соглашаетесь с тем, что это приложение сможет действовать от вашего имени в рамках указанных прав. Вы сможете отозвать этот доступ в любое время в Личном кабинете.
+                </div>
+
+                <form method="post">
+                    <!-- Передаем ReturnUrl (OIDC контекст) -->
+                    <input type="hidden" name="returnUrl" value="@Model.ReturnUrl" />
+
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                        <button type="submit" name="accept" value="false" class="btn btn-outline-secondary me-md-2">
+                            Отказать
+                        </button>
+                        <button type="submit" name="accept" value="true" class="btn btn-primary">
+                            Разрешить
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>

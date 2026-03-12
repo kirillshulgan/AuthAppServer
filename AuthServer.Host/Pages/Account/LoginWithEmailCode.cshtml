@@ -1,0 +1,32 @@
+﻿@page
+@model AuthServer.Host.Pages.Account.LoginWithEmailCodeModel
+@{
+    ViewData["Title"] = "Вход по коду";
+}
+
+<div class="row justify-content-center mt-5">
+    <div class="col-md-5">
+        <h2 class="text-center">@ViewData["Title"]</h2>
+        <p class="text-center text-muted">Введите ваш Email, и мы отправим вам одноразовый код для входа.</p>
+        <hr />
+        <form method="post">
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            <input type="hidden" asp-for="ReturnUrl" />
+
+            <div class="form-group mb-3">
+                <label asp-for="Input.Email" class="form-label"></label>
+                <input asp-for="Input.Email" class="form-control" autocomplete="email" aria-required="true" />
+                <span asp-validation-for="Input.Email" class="text-danger"></span>
+            </div>
+
+            <div class="d-grid gap-2">
+                <button type="submit" class="btn btn-primary">Получить код</button>
+                <a asp-page="./Login" asp-route-returnUrl="@Model.ReturnUrl" class="btn btn-outline-secondary">Отмена</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

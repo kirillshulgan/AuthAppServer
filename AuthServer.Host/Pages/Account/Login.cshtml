@@ -1,0 +1,259 @@
+﻿@page
+@model AuthServer.Host.Pages.Account.LoginModel
+@{
+    ViewData["Title"] = "Вход в систему";
+}
+
+<div class="login-container">
+    <h2>@ViewData["Title"]</h2>
+    <hr />
+
+    <div class="row">
+        <!-- БЛОК 1: Локальный вход (Основной) -->
+        <div class="col-md-6">
+            <section>
+                <form id="account" method="post">
+                    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+                    <input type="hidden" asp-for="ReturnUrl" />
+
+                    <div class="form-group mb-3">
+                        <label asp-for="Input.Email" class="form-label"></label>
+                        <input asp-for="Input.Email" class="form-control" autocomplete="username" aria-required="true" />
+                        <span asp-validation-for="Input.Email" class="text-danger"></span>
+                    </div>
+
+                    <div class="form-group mb-3">
+                        <label asp-for="Input.Password" class="form-label"></label>
+                        <input asp-for="Input.Password" class="form-control" autocomplete="current-password" aria-required="true" />
+                        <span asp-validation-for="Input.Password" class="text-danger"></span>
+                    </div>
+
+                    <div class="form-group mb-3">
+                        <div class="checkbox">
+                            <label asp-for="Input.RememberMe" class="form-label">
+                                <input class="form-check-input" asp-for="Input.RememberMe" />
+                                @Html.DisplayNameFor(m => m.Input.RememberMe)
+                            </label>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary w-100 mb-3">Войти</button>
+                </form>
+
+                <div class="mt-3 text-center">
+                    <a asp-page="/Account/ForgotPassword" class="text-decoration-none small">Забыли пароль?</a>
+                </div>
+
+                <hr class="my-4" />
+
+                <!-- Дополнительные способы входа и регистрация оформлены как кнопки -->
+                <div class="mt-3">
+                    <!-- Кнопки Email и Passkey в один ряд -->
+                    <div class="row g-2 mb-2">
+                        <div class="col-6">
+                            <a asp-page="/Account/LoginWithEmailCode" asp-route-returnUrl="@Model.ReturnUrl"
+                               class="btn btn-outline-secondary w-100 d-flex justify-content-center align-items-center h-100"
+                               style="font-size: 0.9rem;">
+                                <i class="bi bi-envelope me-2"></i> По Email
+                            </a>
+                        </div>
+                        <div class="col-6">
+                            <button type="button" id="btn-login-passkey"
+                                    class="btn btn-outline-secondary w-100 d-flex justify-content-center align-items-center h-100"
+                                    style="font-size: 0.9rem;">
+                                <i class="bi bi-fingerprint me-2"></i> Passkey
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Сообщение об ошибке/статусе Passkey (остается под кнопками) -->
+                    <div id="passkey-login-message" class="text-center small mb-3" style="display:none;"></div>
+
+                    <!-- Длинная зелёная кнопка Регистрации -->
+                    <a asp-page="/Account/Register" asp-route-returnUrl="@Model.ReturnUrl"
+                       class="btn btn-success w-100 mt-2">
+                        Регистрация нового аккаунта
+                    </a>
+                </div>
+            </section>
+        </div>
+
+        <!-- БЛОК 2: Внешние провайдеры (Social Login) -->
+        <div class="col-md-5 offset-md-1">
+            <section>
+                <h3>Вход через другие сервисы</h3>
+                <hr />
+                @if (Model.ExternalLogins?.Count > 0)
+                {
+                    <form id="external-account" asp-page-handler="ExternalLogin" asp-route-returnUrl="@Model.ReturnUrl" method="post" class="d-grid gap-2">
+                        @foreach (var provider in Model.ExternalLogins)
+                        {
+                            var btnClass = provider.Name switch
+                            {
+                                "Google" => "btn-outline-danger",
+                                "GitHub" => "btn-outline-dark",
+                                "Telegram" => "btn-outline-info",
+                                _ => "btn-outline-secondary"
+                            };
+                            var iconClass = provider.Name switch
+                            {
+                                "Google" => "bi-google",
+                                "GitHub" => "bi-github",
+                                "Telegram" => "bi-telegram",
+                                _ => "bi-box-arrow-in-right"
+                            };
+
+                            @if (provider.Name != "Telegram")
+                            {
+                                <button type="submit" class="btn @btnClass" name="provider" value="@provider.Name" title="Войти через @provider.DisplayName">
+                                    <i class="bi @iconClass me-2"></i> Войти через @provider.DisplayName
+                                </button>
+                            }
+                        }
+
+                        <!-- Кнопка Telegram (type="button" чтобы не отправлять форму!) -->
+                        <button type="button" class="btn btn-outline-info w-100" id="btn-telegram-popup">
+                            <i class="bi bi-telegram me-2"></i> Войти через Telegram (Popup)
+                        </button>
+                    </form>
+                }
+            </section>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+
+    <!-- 1. Скрипт Telegram -->
+    <script async src="https://oauth.telegram.org/js/telegram-login.js?3"></script>
+
+    <!-- 2. Общий блок со всеми нашими скриптами -->
+    <script>
+        // ==========================================
+        // ЛОГИКА TELEGRAM
+        // ==========================================
+        const btnTelegram = document.getElementById('btn-telegram-popup');
+        if (btnTelegram) {
+            btnTelegram.addEventListener('click', () => {
+                if (typeof Telegram === 'undefined' || typeof Telegram.Login === 'undefined') {
+                    alert("Скрипт Telegram еще не загрузился, подождите секунду.");
+                    return;
+                }
+
+                Telegram.Login.init({
+                    client_id: 8720807101, // ВАШ CLIENT ID
+                    request_access: ['write']
+                }, function (authData) {
+                    if (authData.error) {
+                        console.error("Ошибка Telegram:", authData.error);
+                        return;
+                    }
+                    if (authData.id_token) {
+                        verifyTelegramTokenOnServer(authData.id_token);
+                    }
+                });
+
+                Telegram.Login.open();
+            });
+        }
+
+        async function verifyTelegramTokenOnServer(idToken) {
+            try {
+                const response = await fetch('/api/auth/telegram-token', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ token: idToken })
+                });
+
+                if (response.ok) {
+                    const urlParams = new URLSearchParams(window.location.search);
+                    window.location.href = urlParams.get('ReturnUrl') || '/';
+                } else {
+                    alert('Ошибка проверки токена на сервере');
+                }
+            } catch (err) {
+                console.error(err);
+            }
+        }
+
+        // ==========================================
+        // ЛОГИКА PASSKEY
+        // ==========================================
+        function base64urlToBuffer(base64url) {
+            const padding = '='.repeat((4 - base64url.length % 4) % 4);
+            const base64 = (base64url + padding).replace(/\-/g, '+').replace(/_/g, '/');
+            const rawData = window.atob(base64);
+            const outputArray = new Uint8Array(rawData.length);
+            for (let i = 0; i < rawData.length; ++i) {
+                outputArray[i] = rawData.charCodeAt(i);
+            }
+            return outputArray.buffer;
+        }
+
+        const btnPasskey = document.getElementById('btn-login-passkey');
+        if (btnPasskey) {
+            btnPasskey.addEventListener('click', async () => {
+                const msg = document.getElementById('passkey-login-message');
+                msg.style.display = 'block';
+                msg.innerText = "Подготовка ко входу...";
+                msg.className = "text-info mt-2";
+
+                if (!window.PublicKeyCredential) {
+                    msg.innerText = "Ваш браузер не поддерживает Passkeys.";
+                    msg.className = "text-danger mt-2";
+                    return;
+                }
+
+                try {
+                    const optionsRes = await fetch('/api/passkeys/login/options', { method: 'POST' });
+                    if (!optionsRes.ok) throw new Error("Ошибка получения настроек сервера.");
+                    const optionsObj = await optionsRes.json();
+
+                    optionsObj.challenge = base64urlToBuffer(optionsObj.challenge);
+                    if (optionsObj.allowCredentials) {
+                        for (let cred of optionsObj.allowCredentials) {
+                            cred.id = base64urlToBuffer(cred.id);
+                        }
+                    }
+
+                    const credential = await navigator.credentials.get({ publicKey: optionsObj });
+
+                    const credentialData = {
+                        id: credential.id,
+                        rawId: credential.id,
+                        type: credential.type,
+                        clientExtensionResults: credential.getClientExtensionResults ? credential.getClientExtensionResults() : {},
+                        response: {
+                            authenticatorData: btoa(String.fromCharCode.apply(null, new Uint8Array(credential.response.authenticatorData))).replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, ''),
+                            clientDataJSON: btoa(String.fromCharCode.apply(null, new Uint8Array(credential.response.clientDataJSON))).replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, ''),
+                            signature: btoa(String.fromCharCode.apply(null, new Uint8Array(credential.response.signature))).replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, ''),
+                            userHandle: credential.response.userHandle ? btoa(String.fromCharCode.apply(null, new Uint8Array(credential.response.userHandle))).replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '') : null
+                        }
+                    };
+
+                    msg.innerText = "Проверка ключа...";
+                    const verifyRes = await fetch('/api/passkeys/login/verify', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(credentialData)
+                    });
+
+                    if (verifyRes.ok) {
+                        msg.className = "text-success mt-2";
+                        msg.innerText = "Вход выполнен успешно! Переадресация...";
+                        const urlParams = new URLSearchParams(window.location.search);
+                        window.location.href = urlParams.get('ReturnUrl') || '/Profile/Index';
+                    } else {
+                        const errText = await verifyRes.text();
+                        throw new Error(errText || "Ошибка при проверке ключа.");
+                    }
+                } catch (err) {
+                    console.error(err);
+                    msg.className = "text-danger mt-2";
+                    msg.innerText = "Ошибка входа: " + err.message;
+                }
+            });
+        }
+    </script>
+}

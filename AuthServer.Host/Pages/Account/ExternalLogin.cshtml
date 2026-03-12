@@ -1,0 +1,62 @@
+﻿@page
+@model AuthServer.Host.Pages.Account.ExternalLoginModel
+@{
+    ViewData["Title"] = "Регистрация через " + Model.ProviderDisplayName;
+}
+
+<h2>@ViewData["Title"]</h2>
+<h4 id="external-login-title">Связывание аккаунта @Model.ProviderDisplayName.</h4>
+<hr />
+
+<div class="row">
+    <div class="col-md-6">
+        @if (Model.AccountExistsError)
+        {
+            <div class="alert alert-warning" role="alert">
+                <h4 class="alert-heading">Пользователь с таким Email уже существует!</h4>
+                <p>
+                    Аккаунт <strong>@Model.Input.Email</strong> уже зарегистрирован в системе.
+                    В целях безопасности мы не можем автоматически привязать ваш @Model.ProviderDisplayName профиль к нему.
+                </p>
+                <hr>
+                <p class="mb-0">
+                    Пожалуйста, <a asp-page="./Login" asp-route-returnUrl="@Model.ReturnUrl">войдите по паролю (или по коду из Email)</a>,
+                    затем перейдите в <strong>Личный кабинет &rarr; Внешние провайдеры</strong> и привяжите @Model.ProviderDisplayName.
+                </p>
+            </div>
+        }
+        else
+        {
+            <p id="external-login-description" class="text-info">
+                Вы успешно прошли аутентификацию через <strong>@Model.ProviderDisplayName</strong>.
+                Пожалуйста, подтвердите email и имя для завершения регистрации на нашем сервере авторизации.
+            </p>
+
+            <form asp-page-handler="Confirmation" asp-route-returnUrl="@Model.ReturnUrl" method="post">
+                <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+                <div class="form-group mb-3">
+                    <label asp-for="Input.Email" class="form-label"></label>
+                    <input asp-for="Input.Email" class="form-control" autocomplete="email" />
+                    <span asp-validation-for="Input.Email" class="text-danger"></span>
+                </div>
+
+                <div class="form-group mb-3">
+                    <label asp-for="Input.FirstName" class="form-label">Имя</label>
+                    <input asp-for="Input.FirstName" class="form-control" />
+                </div>
+
+                <div class="form-group mb-3">
+                    <label asp-for="Input.LastName" class="form-label">Фамилия</label>
+                    <input asp-for="Input.LastName" class="form-control" />
+                </div>
+
+                <button type="submit" class="btn btn-primary">Зарегистрироваться</button>
+            </form>
+        }
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

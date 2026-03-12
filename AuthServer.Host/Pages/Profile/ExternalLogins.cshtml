@@ -1,0 +1,116 @@
+﻿@page
+@model AuthServer.Host.Pages.Profile.ExternalLoginsModel
+@{
+    ViewData["Title"] = "Привязанные аккаунты";
+}
+
+<div class="row mt-4">
+    <!-- Боковое меню -->
+    <div class="col-md-3">
+        <div class="list-group">
+            <a asp-page="./Index" class="list-group-item list-group-item-action">Профиль</a>
+            <a asp-page="./Security" class="list-group-item list-group-item-action">Безопасность</a>
+            <a asp-page="./ExternalLogins" class="list-group-item list-group-item-action active">Привязанные аккаунты</a>
+            <a asp-page="./Applications" class="list-group-item list-group-item-action">Мои приложения (Consent)</a>
+        </div>
+    </div>
+
+    <!-- Основной контент -->
+    <div class="col-md-9">
+        <h4>Управление внешними аккаунтами</h4>
+        <p class="text-muted">Свяжите ваш профиль с внешними сервисами, чтобы использовать их для быстрого входа.</p>
+        <hr />
+
+        @if (!string.IsNullOrEmpty(Model.StatusMessage))
+        {
+            var alertClass = Model.StatusMessage.Contains("ошибка") || Model.StatusMessage.Contains("уже привязан")
+            ? "alert-danger" : "alert-success";
+            <div class="alert @alertClass alert-dismissible fade show" role="alert">
+                @Model.StatusMessage
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        }
+
+        @if (Model.CurrentLogins?.Count > 0)
+        {
+            <h5 class="mb-3">Подключенные сервисы</h5>
+            <table class="table table-bordered mb-5">
+                <tbody>
+                    @foreach (var login in Model.CurrentLogins)
+                    {
+                        <tr>
+                            <td class="align-middle">
+                                @if (login.LoginProvider == "Google")
+                                {
+                                    <i class="bi bi-google text-danger me-2"></i>
+                                }
+                                else if (login.LoginProvider == "GitHub")
+                                {
+
+                                    <i class="bi bi-github me-2"></i>
+                                }
+                                else if (login.LoginProvider == "Telegram")
+                                {
+
+                                    <i class="bi bi-telegram text-info me-2"></i>
+                                }
+                                <strong>@login.ProviderDisplayName</strong>
+                            </td>
+                            <td class="text-end">
+                                @if (Model.ShowRemoveButton)
+                                {
+                                    <form method="post" asp-page-handler="RemoveLogin">
+                                        <input type="hidden" name="loginProvider" value="@login.LoginProvider" />
+                                        <input type="hidden" name="providerKey" value="@login.ProviderKey" />
+                                        <button type="submit" class="btn btn-outline-danger btn-sm" title="Отвязать аккаунт от профиля">
+                                            Отвязать
+                                        </button>
+                                    </form>
+                                }
+                                else
+                                {
+                                    <span class="text-muted small">Единственный способ входа</span>
+                                }
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        }
+        else
+        {
+            <div class="alert alert-light border mb-4">
+                <i class="bi bi-info-circle me-2"></i> У вас нет подключенных внешних сервисов.
+            </div>
+        }
+
+        @if (Model.OtherLogins?.Count > 0)
+        {
+            <h5>Доступные для подключения</h5>
+            <hr />
+            <form method="post" asp-page-handler="LinkLogin" class="d-flex gap-2">
+                @foreach (var provider in Model.OtherLogins)
+                {
+                    var btnClass = provider.Name switch
+                    {
+                        "Google" => "btn-outline-danger",
+                        "GitHub" => "btn-outline-dark",
+                        "Telegram" => "btn-outline-info",
+                        _ => "btn-outline-secondary"
+                    };
+                    var iconClass = provider.Name switch
+                    {
+                        "Google" => "bi-google",
+                        "GitHub" => "bi-github",
+                        "Telegram" => "bi-telegram",
+                        _ => "bi-link"
+                    };
+
+                    <button type="submit" class="btn @btnClass" name="provider" value="@provider.Name" title="Подключить @provider.DisplayName">
+                        <i class="bi @iconClass me-1"></i> Подключить @provider.DisplayName
+                    </button>
+                }
+            </form>
+        }
+    </div>
+</div>
