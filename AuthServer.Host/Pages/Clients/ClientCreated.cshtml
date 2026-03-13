@@ -1,53 +1,62 @@
-@page
+@page "/clients/register"
 @model AuthServer.Host.Pages.Clients.ClientCreatedModel
 @{
-    ViewData["Title"] = "Приложение зарегистрировано";
+    ViewData["Title"] = "Регистрация приложения";
 }
 
 <div class="container mt-5">
     <div class="row justify-content-center">
         <div class="col-md-8">
-            <div class="card shadow">
-                <div class="card-header bg-success text-white">
-                    <h4 class="mb-0">✅ Приложение успешно зарегистрировано</h4>
+            @if (!string.IsNullOrEmpty(Model.ErrorMessage))
+            {
+                <div class="alert alert-danger">
+                    @Model.ErrorMessage
                 </div>
-                <div class="card-body">
-                    <p class="lead">
-                        Передайте эти данные разработчику приложения.
-                        <strong class="text-danger">Секретный ключ показывается только один раз!</strong> Сохраните его.
-                    </p>
+            }
+            else if (!string.IsNullOrEmpty(Model.ClientSecret))
+            {
+                <div class="card shadow">
+                    <div class="card-header bg-success text-white">
+                        <h4 class="mb-0">✅ Приложение успешно зарегистрировано</h4>
+                    </div>
+                    <div class="card-body">
+                        <p class="lead">
+                            Передайте эти данные разработчику приложения.
+                            <strong class="text-danger">Секретный ключ показывается только один раз!</strong> Сохраните его.
+                        </p>
 
-                    <table class="table table-bordered mt-4">
-                        <tbody>
-                            <tr>
-                                <th class="bg-light" style="width: 30%">Название (DisplayName)</th>
-                                <td>@ViewBag.DisplayName</td>
-                            </tr>
-                            <tr>
-                                <th class="bg-light">Client ID</th>
-                                <td><code class="fs-5">@ViewBag.ClientId</code></td>
-                            </tr>
-                            <tr>
-                                <th class="bg-light">Client Secret</th>
-                                <td>
-                                    <div class="input-group">
-                                        <input type="text" class="form-control text-danger fw-bold" value="@ViewBag.ClientSecret" id="secretInput" readonly>
-                                        <button class="btn btn-outline-secondary" type="button" onclick="copySecret()">Скопировать</button>
-                                    </div>
-                                </td>
-                            </tr>
-                            <tr>
-                                <th class="bg-light">Redirect URI</th>
-                                <td>@ViewBag.RedirectUri</td>
-                            </tr>
-                        </tbody>
-                    </table>
+                        <table class="table table-bordered mt-4">
+                            <tbody>
+                                <tr>
+                                    <th class="bg-light" style="width: 30%">Название (DisplayName)</th>
+                                    <td>@Model.DisplayName</td>
+                                </tr>
+                                <tr>
+                                    <th class="bg-light">Client ID</th>
+                                    <td><code class="fs-5">@Model.ClientId</code></td>
+                                </tr>
+                                <tr>
+                                    <th class="bg-light">Client Secret</th>
+                                    <td>
+                                        <div class="input-group">
+                                            <input type="text" class="form-control text-danger fw-bold" value="@Model.ClientSecret" id="secretInput" readonly>
+                                            <button class="btn btn-outline-secondary" type="button" onclick="copySecret()">Скопировать</button>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <th class="bg-light">Redirect URI</th>
+                                    <td>@Model.RedirectUri</td>
+                                </tr>
+                            </tbody>
+                        </table>
 
-                    <div class="alert alert-info mt-4">
-                        <i class="bi bi-info-circle"></i> Приложение настроено для работы по протоколу <b>Authorization Code Flow + PKCE</b>.
+                        <div class="alert alert-info mt-4">
+                            <i class="bi bi-info-circle"></i> Приложение настроено для работы по протоколу <b>Authorization Code Flow + PKCE</b>.
+                        </div>
                     </div>
                 </div>
-            </div>
+            }
         </div>
     </div>
 </div>
@@ -56,7 +65,7 @@
     function copySecret() {
         var copyText = document.getElementById("secretInput");
         copyText.select();
-        copyText.setSelectionRange(0, 99999); // Для мобильных
+        copyText.setSelectionRange(0, 99999);
         navigator.clipboard.writeText(copyText.value);
         alert("Client Secret скопирован в буфер обмена!");
     }

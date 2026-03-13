@@ -1,27 +1,27 @@
-# Этап 1: Сборка
+# Р­С‚Р°Рї 1: РЎР±РѕСЂРєР°
 FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
 WORKDIR /src
 
-# Копируем файл проекта и восстанавливаем зависимости
-# Предполагается, что Dockerfile лежит в корне решения
+# РљРѕРїРёСЂСѓРµРј С„Р°Р№Р» РїСЂРѕРµРєС‚Р° Рё РІРѕСЃСЃС‚Р°РЅР°РІР»РёРІР°РµРј Р·Р°РІРёСЃРёРјРѕСЃС‚Рё
+# РџСЂРµРґРїРѕР»Р°РіР°РµС‚СЃСЏ, С‡С‚Рѕ Dockerfile Р»РµР¶РёС‚ РІ РєРѕСЂРЅРµ СЂРµС€РµРЅРёСЏ
 COPY ["AuthServer.Host/AuthServer.Host.csproj", "AuthServer.Host/"]
-RUN dotnet restore "AuthServer.Host/AuthServer.Host.csproj"
+RUN dotnet restore "AuthServer.Host/AuthServer.Host.csproj" --disable-parallel
 
-# Копируем весь остальной код и собираем
+# РљРѕРїРёСЂСѓРµРј РІРµСЃСЊ РѕСЃС‚Р°Р»СЊРЅРѕР№ РєРѕРґ Рё СЃРѕР±РёСЂР°РµРј
 COPY . .
 WORKDIR "/src/AuthServer.Host"
 RUN dotnet build "AuthServer.Host.csproj" -c Release -o /app/build
 
-# Этап 2: Публикация
+# Р­С‚Р°Рї 2: РџСѓР±Р»РёРєР°С†РёСЏ
 FROM build AS publish
 RUN dotnet publish "AuthServer.Host.csproj" -c Release -o /app/publish /p:UseAppHost=false
 
-# Этап 3: Финальный образ
+# Р­С‚Р°Рї 3: Р¤РёРЅР°Р»СЊРЅС‹Р№ РѕР±СЂР°Р·
 FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS final
 WORKDIR /app
 EXPOSE 8080
 
-# Устанавливаем часовой пояс (опционально, полезно для логов)
+# РЈСЃС‚Р°РЅР°РІР»РёРІР°РµРј С‡Р°СЃРѕРІРѕР№ РїРѕСЏСЃ (РѕРїС†РёРѕРЅР°Р»СЊРЅРѕ, РїРѕР»РµР·РЅРѕ РґР»СЏ Р»РѕРіРѕРІ)
 ENV TZ=Europe/Minsk
 
 COPY --from=publish /app/publish .
