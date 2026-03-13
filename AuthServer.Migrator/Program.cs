@@ -1,4 +1,4 @@
-﻿using AuthServer.Infrastructure.Data;
+using AuthServer.Infrastructure.Data;
 using AuthServer.Migrator;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -10,7 +10,7 @@ var host = Host.CreateDefaultBuilder(args)
     {
         // Используем явную строку подключения
         var connectionString = context.Configuration.GetConnectionString("DefaultConnection")
-            ?? "Host=localhost;Database=auth_server_db;Username=postgres;Password=postgres";
+            ?? "Host=postgres;Port=5432;Database=auth_server_db;Username=postgres;Password=postgres;GSS Encryption Mode=Disable;Keepalive=30";
 
         services.AddDbContext<AuthDbContext>(options =>
         {
