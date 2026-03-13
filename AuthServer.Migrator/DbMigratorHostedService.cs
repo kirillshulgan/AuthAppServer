@@ -1,4 +1,4 @@
-﻿using AuthServer.Infrastructure.Data;
+using AuthServer.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
