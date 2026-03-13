@@ -59,7 +59,8 @@ public class ClientCreatedModel : PageModel
                 OpenIddictConstants.Permissions.Endpoints.Revocation,
                 OpenIddictConstants.Permissions.Scopes.Email,
                 OpenIddictConstants.Permissions.Scopes.Profile,
-                OpenIddictConstants.Permissions.Scopes.Roles
+                OpenIddictConstants.Permissions.Scopes.Roles,
+                OpenIddictConstants.Permissions.ResponseTypes.Code
             },
             Requirements =
             {
