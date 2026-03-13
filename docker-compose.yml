@@ -19,6 +19,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+      network: host
     container_name: auth-server
     restart: unless-stopped
     ports:

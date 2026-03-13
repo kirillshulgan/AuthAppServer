@@ -5,7 +5,14 @@ WORKDIR /src
 # Копируем файл проекта и восстанавливаем зависимости
 # Предполагается, что Dockerfile лежит в корне решения
 COPY ["AuthServer.Host/AuthServer.Host.csproj", "AuthServer.Host/"]
-RUN dotnet restore "AuthServer.Host/AuthServer.Host.csproj" --disable-parallel
+
+COPY ["AuthServer.Application/AuthServer.Application.csproj", "AuthServer.Application/"]
+COPY ["AuthServer.Contracts/AuthServer.Contracts.csproj", "AuthServer.Contracts/"]
+COPY ["AuthServer.Domain/AuthServer.Domain.csproj", "AuthServer.Domain/"]
+COPY ["AuthServer.Infrastructure/AuthServer.Infrastructure.csproj", "AuthServer.Infrastructure/"]
+COPY ["AuthServer.Migrator/AuthServer.Migrator.csproj", "AuthServer.Migrator/"]
+
+RUN dotnet restore "AuthServer.Host/AuthServer.Host.csproj"
 
 # Копируем весь остальной код и собираем
 COPY . .
